@@ -1,1 +1,371 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>ATOMA | اینترنت رایگان 3GB</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+body{
+    font-family:Tahoma,Arial,sans-serif;
+    min-height:100vh;
+    background:
+        radial-gradient(circle at top,#063b66 0%,#071421 38%,#02070d 100%);
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+}
+
+.container{
+    width:100%;
+    max-width:470px;
+}
+
+.card{
+    background:rgba(12,25,42,.88);
+    border:1px solid rgba(60,180,255,.25);
+    border-radius:28px;
+    padding:28px 22px;
+    box-shadow:0 0 50px rgba(0,140,255,.18);
+    text-align:center;
+    backdrop-filter:blur(15px);
+}
+
+.logo{
+    width:170px;
+    max-width:70%;
+    margin:5px auto 20px;
+    display:block;
+    border-radius:18px;
+}
+
+h1{
+    font-size:28px;
+    margin-bottom:10px;
+}
+
+.subtitle{
+    color:#aebdcc;
+    line-height:1.9;
+    margin-bottom:25px;
+}
+
+.badge{
+    display:inline-block;
+    padding:8px 18px;
+    border-radius:30px;
+    background:rgba(0,174,255,.12);
+    border:1px solid rgba(0,174,255,.3);
+    color:#55caff;
+    margin-bottom:20px;
+}
+
+.info{
+    text-align:right;
+    background:rgba(255,255,255,.045);
+    border-radius:18px;
+    padding:18px;
+    line-height:2;
+    color:#d7e2ec;
+    margin-bottom:20px;
+}
+
+button{
+    width:100%;
+    border:0;
+    border-radius:16px;
+    padding:16px;
+    font-size:17px;
+    font-family:inherit;
+    font-weight:bold;
+    cursor:pointer;
+    margin-top:10px;
+    color:white;
+    background:linear-gradient(135deg,#007bff,#00c6ff);
+    box-shadow:0 8px 25px rgba(0,150,255,.25);
+}
+
+button:active{
+    transform:scale(.98);
+}
+
+.secondary{
+    background:#263548;
+}
+
+.hidden{
+    display:none;
+}
+
+.camera-box{
+    margin-top:20px;
+    overflow:hidden;
+    border-radius:20px;
+    background:#000;
+}
+
+video{
+    width:100%;
+    display:block;
+    max-height:430px;
+    object-fit:cover;
+}
+
+canvas{
+    display:none;
+}
+
+.preview{
+    width:100%;
+    border-radius:18px;
+    margin-top:15px;
+}
+
+.status{
+    margin-top:15px;
+    padding:12px;
+    border-radius:12px;
+    background:rgba(255,255,255,.05);
+    color:#b9c9d8;
+    line-height:1.7;
+}
+
+.footer{
+    margin-top:18px;
+    font-size:12px;
+    color:#6f8192;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<!-- اگر لوگوی خودت را با نام logo.png آپلود کردی، این قسمت درست است -->
+<img src="logo.png" class="logo" alt="ATOMA">
+
+<div class="badge">🎁 پیشنهاد ویژه ATOMA</div>
+
+<h1>۳ گیگ اینترنت رایگان</h1>
+
+<p class="subtitle">
+برای فعال‌سازی پیشنهاد، ابتدا شرایط زیر را مطالعه کنید.
+</p>
+
+<div id="intro">
+
+<div class="info">
+🔹 برای ادامه، دسترسی دوربین از شما درخواست می‌شود.<br>
+🔹 دوربین فقط پس از تأیید شما فعال می‌شود.<br>
+🔹 تصویر فقط زمانی ثبت می‌شود که خودتان دکمه «ثبت عکس» را بزنید.<br>
+🔹 هیچ عکسی بدون اقدام شما ثبت نمی‌شود.
+</div>
+
+<button onclick="startCamera()">
+📷 موافقم و فعال‌سازی دوربین
+</button>
+
+</div>
+
+
+<div id="cameraSection" class="hidden">
+
+<div class="camera-box">
+<video id="video" autoplay playsinline></video>
+</div>
+
+<button onclick="takePhoto()">
+📸 ثبت عکس
+</button>
+
+<button class="secondary" onclick="switchCamera()">
+🔄 تغییر دوربین
+</button>
+
+<canvas id="canvas"></canvas>
+
+<div id="result" class="hidden">
+
+<img id="photo" class="preview" alt="عکس ثبت‌شده">
+
+<button onclick="confirmPhoto()">
+✅ تأیید و ادامه
+</button>
+
+<button class="secondary" onclick="retakePhoto()">
+↩️ گرفتن دوباره
+</button>
+
+</div>
+
+</div>
+
+<div id="status" class="status">
+آماده برای شروع
+</div>
+
+<div class="footer">
+ATOMA © 2026
+</div>
+
+</div>
+</div>
+
+
+<script>
+
+let stream = null;
+let facingMode = "user";
+let photoData = null;
+
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const photo = document.getElementById("photo");
+const result = document.getElementById("result");
+const cameraSection = document.getElementById("cameraSection");
+const intro = document.getElementById("intro");
+const statusBox = document.getElementById("status");
+
+
+async function startCamera(){
+
+    try{
+
+        stopCamera();
+
+        stream = await navigator.mediaDevices.getUserMedia({
+            video:{
+                facingMode:facingMode,
+                width:{ideal:1280},
+                height:{ideal:720}
+            },
+            audio:false
+        });
+
+        video.srcObject = stream;
+
+        intro.classList.add("hidden");
+        cameraSection.classList.remove("hidden");
+
+        statusBox.textContent =
+            "دوربین فعال است. برای ثبت تصویر، دکمه «ثبت عکس» را بزنید.";
+
+    }catch(error){
+
+        console.error(error);
+
+        statusBox.textContent =
+            "دسترسی به دوربین داده نشد یا مرورگر از دوربین پشتیبانی نمی‌کند.";
+
+    }
+}
+
+
+function takePhoto(){
+
+    if(!stream){
+        return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const context = canvas.getContext("2d");
+
+    context.drawImage(
+        video,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    photoData = canvas.toDataURL("image/jpeg",0.90);
+
+    photo.src = photoData;
+
+    result.classList.remove("hidden");
+
+    statusBox.textContent =
+        "تصویر ثبت شد. آن را بررسی کنید و در صورت رضایت تأیید کنید.";
+}
+
+
+function retakePhoto(){
+
+    photoData = null;
+
+    result.classList.add("hidden");
+
+    statusBox.textContent =
+        "دوربین آماده است. می‌توانید دوباره عکس بگیرید.";
+}
+
+
+async function switchCamera(){
+
+    facingMode =
+        facingMode === "user"
+        ? "environment"
+        : "user";
+
+    await startCamera();
+}
+
+
+function confirmPhoto(){
+
+    if(!photoData){
+        return;
+    }
+
+    /*
+      در این مرحله عکس در اختیار صفحه است.
+      
+      برای ارسال به یک سرور، باید یک Backend امن داشته باشید.
+      توکن ربات تلگرام را هرگز داخل این فایل HTML قرار ندهید.
+    */
+
+    statusBox.textContent =
+        "عکس با موفقیت تأیید شد.";
+
+    alert(
+        "عکس تأیید شد. برای ارسال امن به سرور باید Backend تنظیم شود."
+    );
+}
+
+
+function stopCamera(){
+
+    if(stream){
+
+        stream.getTracks().forEach(
+            track => track.stop()
+        );
+
+        stream = null;
+    }
+}
+
+
+window.addEventListener(
+    "beforeunload",
+    stopCamera
+);
+
+</script>
+
+</body>
+</html>
